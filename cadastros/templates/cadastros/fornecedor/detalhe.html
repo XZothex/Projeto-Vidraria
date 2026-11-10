@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block titulo %}{{ object.nome }}{% endblock %}
+{% block conteudo %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0">{{ object.nome }} {% include "partials/_situacao.html" with objeto=object %}</h1>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="{% url 'cadastros:fornecedor_list' %}">Voltar</a>
+    <a class="btn btn-primary" href="{% url 'cadastros:fornecedor_update' object.pk %}">Editar</a>
+    {% if object.ativo %}
+    <form method="post" action="{% url 'cadastros:fornecedor_inativar' object.pk %}" onsubmit="return confirm('Inativar este fornecedor?');">
+      {% csrf_token %}<button class="btn btn-outline-danger" type="submit">Inativar</button>
+    </form>
+    {% else %}
+    <form method="post" action="{% url 'cadastros:fornecedor_reativar' object.pk %}">
+      {% csrf_token %}<button class="btn btn-success" type="submit">Reativar</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <dl class="row mb-0">
+      <dt class="col-sm-4">Nome fantasia</dt><dd class="col-sm-8">{{ object.nome_fantasia|default:"—" }}</dd>
+      <dt class="col-sm-4">CPF/CNPJ</dt><dd class="col-sm-8">{{ object.cpf_cnpj_formatado|default:"—" }}</dd>
+      <dt class="col-sm-4">Telefone</dt><dd class="col-sm-8">{{ object.telefone_formatado }}</dd>
+      <dt class="col-sm-4">E-mail</dt><dd class="col-sm-8">{{ object.email|default:"—" }}</dd>
+      <dt class="col-sm-4">Endereço</dt><dd class="col-sm-8">{{ object.endereco|default:"—" }}</dd>
+      <dt class="col-sm-4">Observações</dt><dd class="col-sm-8">{{ object.observacoes|default:"—"|linebreaksbr }}</dd>
+      <dt class="col-sm-4">Criado em</dt><dd class="col-sm-8">{{ object.criado_em|date:"d/m/Y H:i" }}</dd>
+      <dt class="col-sm-4">Atualizado em</dt><dd class="col-sm-8">{{ object.atualizado_em|date:"d/m/Y H:i" }}</dd>
+    </dl>
+  </div>
+</div>
+{% endblock %}
