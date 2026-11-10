@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Segredos e banco local
+.env
+db.sqlite3
+*.sqlite3
+
+# Outros
+staticfiles/
+.idea/
+.vscode/
+.DS_Store

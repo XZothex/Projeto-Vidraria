@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block titulo %}{% if object %}Editar fornecedor{% else %}Novo fornecedor{% endif %}{% endblock %}
+{% block conteudo %}
+{% if object %}
+  {% url 'cadastros:fornecedor_detail' object.pk as voltar_url %}
+  {% include "partials/_form_pagina.html" with titulo="Editar fornecedor" %}
+{% else %}
+  {% url 'cadastros:fornecedor_list' as voltar_url %}
+  {% include "partials/_form_pagina.html" with titulo="Novo fornecedor" %}
+{% endif %}
+{% endblock %}
