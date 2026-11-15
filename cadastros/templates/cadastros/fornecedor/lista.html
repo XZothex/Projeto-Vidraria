@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block titulo %}Fornecedores{% endblock %}
+{% block conteudo %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0">Fornecedores</h1>
+  <a class="btn btn-primary" href="{% url 'cadastros:fornecedor_create' %}">Novo fornecedor</a>
+</div>
+
+<form method="get" class="card card-body shadow-sm mb-3">
+  <div class="row g-2">
+    <div class="col-12 col-md-7">
+      <label class="form-label" for="q">Buscar por nome ou CPF/CNPJ</label>
+      <input type="search" class="form-control" id="q" name="q" value="{{ q }}" placeholder="Ex.: Vidros Sul ou 12.345.678/0001-95">
+    </div>
+    <div class="col-6 col-md-3">
+      <label class="form-label" for="situacao">Situação</label>
+      <select class="form-select" id="situacao" name="situacao">
+        <option value="">Todas</option>
+        <option value="ativo" {% if situacao == "ativo" %}selected{% endif %}>Ativos</option>
+        <option value="inativo" {% if situacao == "inativo" %}selected{% endif %}>Inativos</option>
+      </select>
+    </div>
+    <div class="col-6 col-md-2 d-flex align-items-end gap-2">
+      <button class="btn btn-primary flex-fill" type="submit">Filtrar</button>
+      <a class="btn btn-outline-secondary" href="{% url 'cadastros:fornecedor_list' %}">Limpar</a>
+    </div>
+  </div>
+</form>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr><th>Nome / razão social</th><th>CPF/CNPJ</th><th>Telefone</th><th>Situação</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for objeto in fornecedores %}
+        <tr>
+          <td>{{ objeto.nome }}{% if objeto.nome_fantasia %}<div class="small text-muted">{{ objeto.nome_fantasia }}</div>{% endif %}</td>
+          <td class="text-nowrap">{{ objeto.cpf_cnpj_formatado|default:"—" }}</td>
+          <td class="text-nowrap">{{ objeto.telefone_formatado }}</td>
+          <td>{% include "partials/_situacao.html" %}</td>
+          <td class="text-end text-nowrap">
+            <a class="btn btn-sm btn-outline-primary" href="{{ objeto.get_absolute_url }}">Detalhes</a>
+            <a class="btn btn-sm btn-outline-secondary" href="{% url 'cadastros:fornecedor_update' objeto.pk %}">Editar</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-center text-muted py-4">Nenhum fornecedor encontrado.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<p class="text-muted small mt-2">{{ paginator.count|default:0 }} fornecedor(es) encontrado(s).</p>
+{% include "partials/_paginacao.html" %}
+{% endblock %}

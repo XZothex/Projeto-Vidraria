@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block titulo %}{{ object.nome }}{% endblock %}
+{% block conteudo %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0">{{ object.nome }} {% include "partials/_situacao.html" with objeto=object %}</h1>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="{% url 'cadastros:material_list' %}">Voltar</a>
+    <a class="btn btn-primary" href="{% url 'cadastros:material_update' object.pk %}">Editar</a>
+    {% if object.ativo %}
+    <form method="post" action="{% url 'cadastros:material_inativar' object.pk %}" onsubmit="return confirm('Inativar este material?');">
+      {% csrf_token %}<button class="btn btn-outline-danger" type="submit">Inativar</button>
+    </form>
+    {% else %}
+    <form method="post" action="{% url 'cadastros:material_reativar' object.pk %}">
+      {% csrf_token %}<button class="btn btn-success" type="submit">Reativar</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <dl class="row mb-0">
+      <dt class="col-sm-4">Código</dt><dd class="col-sm-8">{{ object.codigo }}</dd>
+      <dt class="col-sm-4">Categoria</dt><dd class="col-sm-8">{{ object.get_categoria_display }}</dd>
+      <dt class="col-sm-4">Unidade de controle</dt><dd class="col-sm-8">{{ object.get_unidade_controle_display }}</dd>
+      <dt class="col-sm-4">Descrição</dt><dd class="col-sm-8">{{ object.descricao|default:"—"|linebreaksbr }}</dd>
+      <dt class="col-sm-4">Tipo de vidro</dt><dd class="col-sm-8">{{ object.get_tipo_vidro_display|default:"—" }}</dd>
+      <dt class="col-sm-4">Cor</dt><dd class="col-sm-8">{{ object.cor|default:"—" }}</dd>
+      <dt class="col-sm-4">Espessura</dt><dd class="col-sm-8">{% if object.espessura_mm %}{{ object.espessura_mm|floatformat:"-2" }} mm{% else %}—{% endif %}</dd>
+      <dt class="col-sm-4">Localização padrão</dt><dd class="col-sm-8">{{ object.localizacao_padrao|default:"—" }}</dd>
+      <dt class="col-sm-4">Criado em</dt><dd class="col-sm-8">{{ object.criado_em|date:"d/m/Y H:i" }}</dd>
+      <dt class="col-sm-4">Atualizado em</dt><dd class="col-sm-8">{{ object.atualizado_em|date:"d/m/Y H:i" }}</dd>
+    </dl>
+  </div>
+</div>
+<p class="text-muted small mt-2">Saldos, reservas e peças físicas são controlados por outros módulos.</p>
+{% endblock %}

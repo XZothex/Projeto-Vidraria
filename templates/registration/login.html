@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block titulo %}Entrar{% endblock %}
+{% block conteudo %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-6 col-lg-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h1 class="h4 mb-3">Entrar</h1>
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {% if form.non_field_errors %}
+          <div class="alert alert-danger">Usuário ou senha incorretos.</div>
+          {% endif %}
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.username.id_for_label }}">Usuário</label>
+            <input type="text" name="username" class="form-control" id="{{ form.username.id_for_label }}" autofocus required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.password.id_for_label }}">Senha</label>
+            <input type="password" name="password" class="form-control" id="{{ form.password.id_for_label }}" required>
+          </div>
+          <input type="hidden" name="next" value="{{ next }}">
+          <button class="btn btn-primary w-100" type="submit">Entrar</button>
+        </form>
+        <p class="text-muted small mt-3 mb-0">Tela provisória: será substituída pelo módulo de login da equipe.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

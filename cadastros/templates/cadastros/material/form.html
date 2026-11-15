@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block titulo %}{% if object %}Editar material{% else %}Novo material{% endif %}{% endblock %}
+{% block conteudo %}
+{% if object %}
+  {% url 'cadastros:material_detail' object.pk as voltar_url %}
+  {% include "partials/_form_pagina.html" with titulo="Editar material" %}
+{% else %}
+  {% url 'cadastros:material_list' as voltar_url %}
+  {% include "partials/_form_pagina.html" with titulo="Novo material" %}
+{% endif %}
+{% endblock %}
