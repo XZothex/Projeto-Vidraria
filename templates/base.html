@@ -20,6 +20,7 @@
         {% if user.is_authenticated %}
         <li class="nav-item"><a class="nav-link" href="{% url 'cadastros:material_list' %}">Materiais</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'cadastros:fornecedor_list' %}">Fornecedores</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'pedidos:cliente_list' %}">Clientes</a></li>
         {% endif %}
         {# Outros módulos adicionam seus links aqui #}
       </ul>
