@@ -21,7 +21,7 @@ class ClienteTest(BaseTest):
 
     def test_exige_login(self):
         self.client.logout()
-        for nome in ("cliente_list",):
+        for nome in ("cliente_list", "pedido_list"):
             resposta = self.client.get(reverse(f"pedidos:{nome}"))
             self.assertEqual(resposta.status_code, 302)
             self.assertIn("/entrar/", resposta.url)

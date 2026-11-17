@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block titulo %}{% if object %}Editar item{% else %}Novo item{% endif %} · {{ pedido.numero }}{% endblock %}
+{% block conteudo %}
+{% url 'pedidos:pedido_detail' pedido.pk as voltar_url %}
+{% if object %}
+  {% include "partials/_form_pagina.html" with titulo="Editar item do pedido" %}
+{% else %}
+  {% include "partials/_form_pagina.html" with titulo="Adicionar item ao pedido" %}
+{% endif %}
+{% endblock %}

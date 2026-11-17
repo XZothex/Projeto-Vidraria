@@ -7,6 +7,7 @@
     <a class="btn btn-outline-secondary" href="{% url 'pedidos:cliente_list' %}">Voltar</a>
     <a class="btn btn-primary" href="{% url 'pedidos:cliente_update' object.pk %}">Editar</a>
     {% if object.ativo %}
+    <a class="btn btn-outline-success" href="{% url 'pedidos:pedido_create' %}?cliente={{ object.pk }}">Novo pedido</a>
     <form method="post" action="{% url 'pedidos:cliente_inativar' object.pk %}" onsubmit="return confirm('Inativar este cliente?');">
       {% csrf_token %}<button class="btn btn-outline-danger" type="submit">Inativar</button>
     </form>
@@ -31,4 +32,24 @@
   </div>
 </div>
 
+<h2 class="h5">Pedidos recentes</h2>
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light"><tr><th>Pedido</th><th>Criado em</th><th>Situação</th><th></th></tr></thead>
+      <tbody>
+        {% for pedido in pedidos_recentes %}
+        <tr>
+          <td>{{ pedido.numero }}</td>
+          <td>{{ pedido.criado_em|date:"d/m/Y" }}</td>
+          <td>{% include "pedidos/partials/_status_pedido.html" %}</td>
+          <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ pedido.get_absolute_url }}">Abrir</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="text-center text-muted py-3">Nenhum pedido para este cliente.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 {% endblock %}
