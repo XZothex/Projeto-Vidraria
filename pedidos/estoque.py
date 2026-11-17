@@ -14,9 +14,16 @@ from .models import Reserva
 
 
 def saldo_fisico(material):
-    """Quantidade fisicamente em estoque (na unidade de controle do material).
+    """Quantidade fisicamente em estoque, em CHAPAS (decisão da equipe: o saldo é por chapa).
 
-    Devolve ``None`` enquanto não houver controle de saldo.
+    Deve ser expressa na mesma unidade da quantidade pedida, ou seja, em
+    ``material.unidade_controle``. Para materiais controlados por chapa
+    (``Material.Unidade.CHAPA``) isso já é direto. Materiais cadastrados em m² ou metro
+    NÃO são comparáveis com um saldo em chapas: ou o cadastro passa a usar "chapa" para
+    eles, ou este módulo precisa converter (ex.: área da chapa) antes de comparar.
+
+    Devolve ``None`` enquanto não houver controle de saldo (ou para materiais que o
+    estoque não controla por chapa): nesse caso a reserva é aceita sem checar disponibilidade.
     TODO: integrar com o módulo de estoque.
     """
     return None
