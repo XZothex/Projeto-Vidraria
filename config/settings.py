@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # Módulos do sistema (um app por responsabilidade)
     "cadastros",  # materiais e fornecedores
+    "pedidos",  # clientes, pedidos, reservas e entregas
 ]
 
 MIDDLEWARE = [
