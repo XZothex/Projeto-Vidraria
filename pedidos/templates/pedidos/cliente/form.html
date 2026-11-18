@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block titulo %}{% if object %}Editar cliente{% else %}Novo cliente{% endif %}{% endblock %}
+{% block conteudo %}
+{% if object %}
+  {% url 'pedidos:cliente_detail' object.pk as voltar_url %}
+  {% include "partials/_form_pagina.html" with titulo="Editar cliente" %}
+{% else %}
+  {% url 'pedidos:cliente_list' as voltar_url %}
+  {% include "partials/_form_pagina.html" with titulo="Novo cliente" %}
+{% endif %}
+{% endblock %}

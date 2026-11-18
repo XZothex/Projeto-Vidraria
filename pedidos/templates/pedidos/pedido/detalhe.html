@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block titulo %}Pedido {{ pedido.numero }}{% endblock %}
+{% block conteudo %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0">Pedido {{ pedido.numero }} {% include "pedidos/partials/_status_pedido.html" %}</h1>
+  <div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-outline-secondary" href="{% url 'pedidos:pedido_list' %}">Voltar</a>
+    {% if pedido.aberto %}
+    <a class="btn btn-outline-primary" href="{% url 'pedidos:pedido_update' pedido.pk %}">Editar</a>
+    {% if pode_entregar %}<a class="btn btn-success" href="{% url 'pedidos:pedido_entregar' pedido.pk %}">Registrar entrega</a>{% endif %}
+    <a class="btn btn-outline-danger" href="{% url 'pedidos:pedido_cancelar' pedido.pk %}">Cancelar pedido</a>
+    {% endif %}
+  </div>
+</div>
+
+{% if pedido.status == "cancelado" %}
+<div class="alert alert-secondary">
+  <strong>Pedido cancelado</strong> em {{ pedido.cancelado_em|date:"d/m/Y H:i" }}{% if pedido.cancelado_por %} por {{ pedido.cancelado_por.get_username }}{% endif %}.
+  Todas as reservas foram liberadas.<br>
+  <span class="text-muted">Motivo:</span> {{ pedido.motivo_cancelamento|linebreaksbr }}
+</div>
+{% elif entrega %}
+<div class="alert alert-success">
+  <strong>Entregue</strong> em {{ entrega.data_entrega|date:"d/m/Y" }} · recebido por {{ entrega.recebido_por }}
+  <span class="text-muted">(registrado por {{ entrega.registrado_por.get_username|default:"—" }} em {{ entrega.registrado_em|date:"d/m/Y H:i" }})</span>
+  {% if entrega.observacoes %}<div class="mt-1">{{ entrega.observacoes|linebreaksbr }}</div>{% endif %}
+</div>
+{% endif %}
+
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <dl class="row mb-0">
+      <dt class="col-sm-4">Cliente</dt>
+      <dd class="col-sm-8"><a href="{{ pedido.cliente.get_absolute_url }}">{{ pedido.cliente.nome }}</a> · {{ pedido.cliente.telefone_formatado }}</dd>
+      <dt class="col-sm-4">Entrega prevista</dt><dd class="col-sm-8">{{ pedido.data_prevista|date:"d/m/Y"|default:"—" }}</dd>
+      <dt class="col-sm-4">Observações</dt><dd class="col-sm-8">{{ pedido.observacoes|default:"—"|linebreaksbr }}</dd>
+      <dt class="col-sm-4">Criado</dt><dd class="col-sm-8">{{ pedido.criado_em|date:"d/m/Y H:i" }}{% if pedido.criado_por %} por {{ pedido.criado_por.get_username }}{% endif %}</dd>
+    </dl>
+  </div>
+</div>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+  <h2 class="h5 mb-0">Itens e reservas
+    <small class="text-muted">({{ qtd_reservados }} reservado(s), {{ qtd_pendentes }} pendente(s))</small>
+  </h2>
+  {% if pedido.aberto %}
+  <div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-sm btn-primary" href="{% url 'pedidos:item_create' pedido.pk %}">Adicionar item</a>
+    {% if qtd_pendentes and itens %}
+    <form method="post" action="{% url 'pedidos:pedido_reservar' pedido.pk %}">
+      {% csrf_token %}<button class="btn btn-sm btn-outline-success" type="submit">Reservar pendentes</button>
+    </form>
+    {% endif %}
+    {% if qtd_reservados %}
+    <form method="post" action="{% url 'pedidos:pedido_liberar' pedido.pk %}" onsubmit="return confirm('Liberar todas as reservas deste pedido?');">
+      {% csrf_token %}<button class="btn btn-sm btn-outline-warning" type="submit">Liberar todas</button>
+    </form>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead class="table-light">
+        <tr><th>Material</th><th>Especificação</th><th class="text-end">Quantidade</th><th>Reserva</th>{% if pedido.aberto %}<th></th>{% endif %}</tr>
+      </thead>
+      <tbody>
+        {% for item in itens %}
+        <tr>
+          <td>{{ item.material.nome }}<div class="small text-muted">{{ item.material.codigo }}</div></td>
+          <td>{{ item.especificacao|default:"—" }}</td>
+          <td class="text-end text-nowrap">{{ item.quantidade|floatformat:"-3" }} <span class="text-muted small">{{ item.material.get_unidade_controle_display }}</span>
+            {% if item.disponivel is not None %}<div class="small text-muted">disponível: {{ item.disponivel|floatformat:"-3" }}</div>{% endif %}
+          </td>
+          <td>
+            {% if item.reservado %}<span class="badge text-bg-success">Reservado</span>
+            {% elif pedido.status == "entregue" %}<span class="badge text-bg-info">Entregue</span>
+            {% elif pedido.status == "cancelado" %}<span class="badge text-bg-secondary">Liberado</span>
+            {% else %}<span class="badge text-bg-warning">Não reservado</span>{% endif %}
+          </td>
+          {% if pedido.aberto %}
+          <td class="text-end text-nowrap">
+            <div class="d-flex justify-content-end gap-1">
+              {% if item.reservado %}
+              <form method="post" action="{% url 'pedidos:item_liberar' pedido.pk item.pk %}">{% csrf_token %}<button class="btn btn-sm btn-outline-warning" type="submit">Liberar</button></form>
+              {% else %}
+              <form method="post" action="{% url 'pedidos:item_reservar' pedido.pk item.pk %}">{% csrf_token %}<button class="btn btn-sm btn-outline-success" type="submit">Reservar</button></form>
+              <a class="btn btn-sm btn-outline-secondary" href="{% url 'pedidos:item_update' pedido.pk item.pk %}">Editar</a>
+              <form method="post" action="{% url 'pedidos:item_remover' pedido.pk item.pk %}" onsubmit="return confirm('Remover este item?');">{% csrf_token %}<button class="btn btn-sm btn-outline-danger" type="submit">Remover</button></form>
+              {% endif %}
+            </div>
+          </td>
+          {% endif %}
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-center text-muted py-4">Nenhum item ainda.{% if pedido.aberto %} Use “Adicionar item”.{% endif %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% if pedido.aberto %}
+<p class="text-muted small mt-2">Para editar ou remover um item reservado, libere a reserva antes. A entrega só pode ser registrada com todos os itens reservados.</p>
+{% endif %}
+{% endblock %}

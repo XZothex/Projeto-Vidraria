@@ -11,6 +11,8 @@ urlpatterns = [
     path("sair/", auth_views.LogoutView.as_view(), name="logout"),
     # Módulo de cadastros (materiais e fornecedores)
     path("cadastros/", include("cadastros.urls")),
+    # Módulo de pedidos (clientes, pedidos, reservas e entregas)
+    path("pedidos/", include("pedidos.urls")),
     # Página inicial provisória (o dashboard é de outro módulo)
     path("", RedirectView.as_view(pattern_name="cadastros:material_list"), name="home"),
 ]
