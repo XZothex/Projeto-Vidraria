@@ -1,0 +1,3 @@
+{% extends "base.html" %}
+{% block titulo %}Cadastrar chapa ou sobra{% endblock %}
+{% block conteudo %}<div class="row justify-content-center"><div class="col-lg-8"><h1 class="h3 mb-3">Cadastrar chapa ou sobra</h1><div class="alert alert-info">Este cadastro é a fonte local de chapas selecionáveis pelo módulo de cortes. Quando a etapa 4 estiver pronta, será necessário conectar o recebimento de estoque a este cadastro.</div><form method="post" class="card card-body">{% csrf_token %}{{ form.as_p }}<div class="d-flex gap-2"><button class="btn btn-primary">Salvar</button><a class="btn btn-outline-secondary" href="{% url 'cortes:chapas' %}">Cancelar</a></div></form></div></div>{% endblock %}

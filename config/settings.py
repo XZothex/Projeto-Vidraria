@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     # Módulos do sistema (um app por responsabilidade)
     "cadastros",  # materiais e fornecedores
     "pedidos",  # clientes, pedidos, reservas e entregas
+    "cortes",  # cortes, peças e sobras
     "movimentacoes",  # entradas, perdas e ajustes de estoque (banco MySQL)
 ]
 

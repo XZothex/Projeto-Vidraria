@@ -3,11 +3,13 @@ from threading import Barrier
 from unittest import skipUnless
 
 from django.contrib.auth import get_user_model
-from django.db import close_old_connections, connection, transaction
+from django.db import close_old_connections, connection
 from django.test import TransactionTestCase
+from django.urls import reverse
 from django.utils import timezone
 
 from cadastros.models import Material
+from cortes.models import OperacaoCorte
 from movimentacoes.tests.base import SQL_DIR, executar_script
 from pedidos import estoque, services
 from pedidos.models import Cliente, ItemPedido, Pedido, Reserva
@@ -63,13 +65,23 @@ class EstoqueMySQLTest(TransactionTestCase):
         outro = next(p for p in pedidos if p.pk != vencedores[0].pk)
         services.reservar(outro, usuario)
         id_reserva = Reserva.objects.get(item__pedido=outro).mysql_reservas[0]
-        with transaction.atomic(), connection.cursor() as cursor:
-            cursor.execute("UPDATE reserva SET status = 'cortada' WHERE id_reserva = %s", [id_reserva])
-            cursor.execute(
-                "INSERT INTO movimentacao (id_estoque, id_reserva, id_usuario, tipo, quantidade) "
-                "VALUES (1, %s, 1, 'corte', -1)",
-                [id_reserva],
-            )
+        item = outro.itens.get()
+        self.client.force_login(usuario)
+        resposta = self.client.post(reverse("cortes:novo"), {
+            "pedido": outro.pk, "item_pedido": item.pk, "material": material.pk,
+            "origem": "mysql", "kerf_mm": "3",
+            "pecas-TOTAL_FORMS": "1", "pecas-INITIAL_FORMS": "0",
+            "pecas-0-largura_mm": "1000", "pecas-0-altura_mm": "500", "pecas-0-quantidade": "1",
+            "sobras-TOTAL_FORMS": "1", "sobras-INITIAL_FORMS": "0",
+            "sobras-0-largura_mm": "500", "sobras-0-altura_mm": "500",
+        })
+        self.assertEqual(resposta.status_code, 302, resposta.context["form"].errors if resposta.context else "")
+        corte = OperacaoCorte.objects.get(item_pedido=item)
+        self.assertEqual(corte.pecas.count(), 1)
+        sobra = corte.sobras.get()
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT fisico, origem FROM saldo_estoque WHERE id_estoque = %s", [sobra.mysql_lote_id])
+            self.assertEqual(cursor.fetchone(), (1, "sobra"))
         saldo = estoque.saldo_fisico(material)
         services.registrar_entrega(outro, usuario, timezone.localdate(), "Cliente")
         self.assertEqual(estoque.saldo_fisico(material), saldo)
