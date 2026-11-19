@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block titulo %}Relatórios{% endblock %}
+{% block conteudo %}
+<h1 class="h3 mb-1">Relatórios</h1><p class="text-muted mb-4">Consultas com filtros básicos e exportação CSV.</p>
+<div class="row g-3">{% for chave,nome in relatorios.items %}<div class="col-md-6"><div class="card h-100"><div class="card-body"><h2 class="h5">{{ nome }}</h2><p class="text-muted">Consultar informações do sistema e aplicar filtro por texto.</p><a class="btn btn-outline-primary" href="{% url 'painel:relatorio' chave %}">Abrir relatório</a></div></div></div>{% endfor %}</div>
+<p class="mt-4"><a href="{% url 'movimentacoes:historico' %}">Consultar movimentações físicas do estoque</a></p>
+{% endblock %}

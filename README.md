@@ -8,3 +8,7 @@ Os [scripts e o guia do MySQL Workbench](banco/mysql/LEIA-ME.md) criam a base de
 ## Cortes e sobras
 
 O [guia de cortes e sobras](docs/cortes.md) descreve o fluxo local e com MySQL.
+
+## Painel e relatórios
+
+O [guia do painel](docs/painel.md) explica os relatórios e a origem dos saldos.

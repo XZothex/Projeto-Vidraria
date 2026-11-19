@@ -14,6 +14,7 @@ urlpatterns = [
     # Módulo de pedidos (clientes, pedidos, reservas e entregas)
     path("pedidos/", include("pedidos.urls")),
     # Módulo de entradas, perdas e ajustes de estoque
+    path("painel/", include("painel.urls")),
     path("cortes/", include("cortes.urls")),
     path("movimentacoes/", include("movimentacoes.urls")),
     # Página inicial provisória (o dashboard é de outro módulo)

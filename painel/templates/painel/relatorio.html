@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block conteudo %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div><h1 class="h3 mb-1">{{ titulo }}</h1><a href="{% url 'painel:relatorios' %}">Voltar aos relatórios</a></div>
+  <a class="btn btn-outline-success" href="?{{ csv_query }}">Exportar CSV</a>
+</div>
+<form method="get" class="card card-body mb-3">
+  <label for="relatorio-busca" class="form-label">Buscar no relatório</label>
+  <div class="input-group">
+    <input id="relatorio-busca" class="form-control" name="q" value="{{ request.GET.q }}">
+    <button class="btn btn-primary">Filtrar</button>
+  </div>
+</form>
+{% if saldo_local %}<p>Este ambiente mostra as reservas de pedidos. Configure o MySQL para consultar o saldo físico e disponível.</p>{% endif %}
+{% if tipo == "posicao" and not saldo_local %}<p>Chapas de compra e sobras aparecem em linhas separadas.</p>{% endif %}
+{% if tipo == "movimentacoes" %}<p><a href="{% url 'movimentacoes:historico' %}">Consultar histórico físico do estoque</a></p>{% endif %}
+<div class="card"><div class="table-responsive"><table class="table table-hover mb-0">
+  <thead><tr>{% for coluna in colunas %}<th scope="col">{{ coluna }}</th>{% endfor %}</tr></thead>
+  <tbody>
+    {% for linha in linhas %}
+    <tr>{% for valor in linha %}<td>{{ valor|date:"d/m/Y H:i"|default:valor }}</td>{% endfor %}</tr>
+    {% empty %}<tr><td colspan="{{ colunas|length }}" class="text-center py-3">Nenhum registro encontrado.</td></tr>{% endfor %}
+  </tbody>
+</table></div></div>
+{% endblock %}
