@@ -10,10 +10,10 @@ Use **Cortes e sobras** no menu do Django após executar `python manage.py migra
 3. Registre a entrada de chapas com largura e altura. Abra um pedido com esse material e reserve.
 4. Em **Cortes e sobras**, registre o corte com a origem **Lote reservado no MySQL**.
    Informe as peças e as sobras. Use milímetros inteiros nas dimensões das sobras.
-5. Confira o saldo e os lotes de sobras em **Estoque**. Conclua a entrega em **Pedidos**.
+5. Confira o saldo e os lotes de sobras em **Estoque**. Conclua a entrega em **Pedidos** e verifique os eventos em **Estoque → Histórico**.
 
-Cada corte MySQL exige uma reserva ativa em um único lote e consome a quantidade
-reservada inteira. A baixa do lote, a entrada das sobras e o registro da operação
+Cada corte MySQL usa um lote da reserva e consome a quantidade reservada nele.
+Se a reserva cobrir vários lotes, registre um corte para cada lote. A baixa do lote, a entrada das sobras e o registro da operação
 ocorrem na mesma transação. A entrega após o corte registra quantidade zero.
 O acesso de escrita exige um login vinculado aos perfis administração, estoque ou
 produção. Sobras aparecem como lotes separados no MySQL e a reserva de pedidos continua

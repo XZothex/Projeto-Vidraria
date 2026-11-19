@@ -8,7 +8,7 @@ from .models import ChapaDisponivel, OperacaoCorte, PecaCortada, Sobra
 
 
 @transaction.atomic
-def registrar_operacao(*, operacao, pecas, sobras, usuario=None):
+def registrar_operacao(*, operacao, pecas, sobras, usuario=None, id_reserva_mysql=None):
     """Registra o corte, consome a chapa selecionada e cria sobras no estoque.
 
     Validação por área é um controle preliminar: não substitui um algoritmo de
@@ -30,7 +30,7 @@ def registrar_operacao(*, operacao, pecas, sobras, usuario=None):
         if usuario is None:
             raise ValidationError("Informe o responsável pelo corte.")
         with connection.cursor() as cursor:
-            alocacao = estoque_mysql.preparar(cursor, operacao, usuario)
+            alocacao = estoque_mysql.preparar(cursor, operacao, usuario, id_reserva_mysql)
     if operacao.origem == OperacaoCorte.Origem.ESTOQUE:
         chapa = ChapaDisponivel.objects.select_for_update().get(pk=operacao.chapa_estoque_id)
         if chapa.status != ChapaDisponivel.Status.DISPONIVEL:

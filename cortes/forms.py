@@ -3,6 +3,7 @@ from django.db import connection
 from django.forms import inlineformset_factory
 from cadastros.models import Material
 from pedidos.models import ItemPedido, Pedido
+from . import estoque_mysql
 from .models import ChapaDisponivel, OperacaoCorte, PecaCortada, Sobra
 
 
@@ -53,6 +54,13 @@ class OperacaoCorteForm(BootstrapMixin, forms.ModelForm):
         if connection.vendor == "mysql":
             self.fields["origem"].choices = [(OperacaoCorte.Origem.MYSQL, "Lote reservado no MySQL")]
             self.fields["origem"].initial = OperacaoCorte.Origem.MYSQL
+            self.fields["id_reserva_mysql"] = forms.TypedChoiceField(
+                label="Lote reservado", required=False, coerce=int, empty_value=None,
+                choices=[("", "Usar o único lote pendente do item"), *estoque_mysql.opcoes_lote()],
+                widget=forms.Select(attrs={"class": "form-select"}),
+            )
+            self.order_fields(["pedido", "item_pedido", "material", "origem", "id_reserva_mysql"])
+
             for campo in ("chapa_estoque", "largura_chapa_mm", "altura_chapa_mm", "espessura_mm", "quantidade_chapas"):
                 del self.fields[campo]
         else:
@@ -100,5 +108,5 @@ class SobraForm(BootstrapMixin, forms.ModelForm):
         widgets = {"largura_mm": forms.NumberInput(attrs={"min": "0.01", "step": "0.01"}), "altura_mm": forms.NumberInput(attrs={"min": "0.01", "step": "0.01"})}
 
 
-PecaFormSet = inlineformset_factory(OperacaoCorte, PecaCortada, form=PecaCortadaForm, extra=1, can_delete=True)
-SobraFormSet = inlineformset_factory(OperacaoCorte, Sobra, form=SobraForm, extra=1, can_delete=True)
+PecaFormSet = inlineformset_factory(OperacaoCorte, PecaCortada, form=PecaCortadaForm, extra=1, can_delete=True, max_num=100, validate_max=True, absolute_max=100)
+SobraFormSet = inlineformset_factory(OperacaoCorte, Sobra, form=SobraForm, extra=1, can_delete=True, max_num=100, validate_max=True, absolute_max=100)

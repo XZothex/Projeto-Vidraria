@@ -1,6 +1,7 @@
+import os
 from concurrent.futures import ThreadPoolExecutor
 from threading import Barrier
-from unittest import skipUnless
+from unittest import mock, skipUnless
 
 from django.contrib.auth import get_user_model
 from django.db import close_old_connections, connection
@@ -67,18 +68,22 @@ class EstoqueMySQLTest(TransactionTestCase):
         id_reserva = Reserva.objects.get(item__pedido=outro).mysql_reservas[0]
         item = outro.itens.get()
         self.client.force_login(usuario)
-        resposta = self.client.post(reverse("cortes:novo"), {
+        dados_corte = {
             "pedido": outro.pk, "item_pedido": item.pk, "material": material.pk,
             "origem": "mysql", "kerf_mm": "3",
-            "pecas-TOTAL_FORMS": "1", "pecas-INITIAL_FORMS": "0",
+            "pecas-TOTAL_FORMS": "2", "pecas-INITIAL_FORMS": "0",
             "pecas-0-largura_mm": "1000", "pecas-0-altura_mm": "500", "pecas-0-quantidade": "1",
-            "sobras-TOTAL_FORMS": "1", "sobras-INITIAL_FORMS": "0",
+            "pecas-1-largura_mm": "250", "pecas-1-altura_mm": "250", "pecas-1-quantidade": "1",
+            "sobras-TOTAL_FORMS": "2", "sobras-INITIAL_FORMS": "0",
             "sobras-0-largura_mm": "500", "sobras-0-altura_mm": "500",
-        })
+            "sobras-1-largura_mm": "400", "sobras-1-altura_mm": "300",
+        }
+        resposta = self.client.post(reverse("cortes:novo"), dados_corte)
         self.assertEqual(resposta.status_code, 302, resposta.context["form"].errors if resposta.context else "")
         corte = OperacaoCorte.objects.get(item_pedido=item)
-        self.assertEqual(corte.pecas.count(), 1)
-        sobra = corte.sobras.get()
+        self.assertEqual(corte.pecas.count(), 2)
+        self.assertEqual(corte.sobras.count(), 2)
+        sobra = corte.sobras.first()
         with connection.cursor() as cursor:
             cursor.execute("SELECT fisico, origem FROM saldo_estoque WHERE id_estoque = %s", [sobra.mysql_lote_id])
             self.assertEqual(cursor.fetchone(), (1, "sobra"))
@@ -90,3 +95,42 @@ class EstoqueMySQLTest(TransactionTestCase):
                 "SELECT quantidade FROM movimentacao WHERE id_reserva = %s AND tipo = 'entrega'", [id_reserva],
             )
             self.assertEqual(cursor.fetchone()[0], 0)
+
+
+        with connection.cursor() as cursor:
+            for local in ("Lote A", "Lote B"):
+                cursor.execute(
+                    "INSERT INTO estoque (id_material, localizacao, largura_mm, altura_mm) "
+                    "VALUES (1, %s, 2000, 1000)", [local],
+                )
+                cursor.execute(
+                    "INSERT INTO movimentacao (id_estoque, id_usuario, tipo, quantidade) "
+                    "VALUES (%s, 1, 'entrada', 1)", [cursor.lastrowid],
+                )
+        dividido = pedido(2)
+        services.reservar(dividido, usuario)
+        lotes = Reserva.objects.get(item__pedido=dividido).mysql_reservas
+        self.assertEqual(len(lotes), 2)
+        url = reverse("cortes:novo")
+        dados_corte.update(pedido=dividido.pk, item_pedido=dividido.itens.get().pk)
+        self.assertContains(self.client.post(url, dados_corte), "Selecione o lote a cortar")
+        saldo = estoque.saldo_fisico(material)
+        for lote in lotes:
+            dados_corte["id_reserva_mysql"] = lote
+            resposta = self.client.post(url, dados_corte)
+            self.assertEqual(resposta.status_code, 302, resposta.context["form"].errors if resposta.context else "")
+        self.assertEqual(estoque.saldo_fisico(material), saldo - 2)
+        self.assertEqual(OperacaoCorte.objects.filter(pedido=dividido).count(), 2)
+        self.assertEqual(self.client.post(url, dados_corte).status_code, 200)
+        self.assertEqual(estoque.saldo_fisico(material), saldo - 2)
+        services.registrar_entrega(dividido, usuario, timezone.localdate(), "Cliente")
+        self.assertEqual(estoque.saldo_fisico(material), saldo - 2)
+
+        with mock.patch.dict(os.environ, {"MYSQL_DATABASE": connection.settings_dict["NAME"]}):
+            historico = reverse("movimentacoes:historico")
+            for tipo, rotulo in (("corte", "Corte"), ("sobra", "Sobra"), ("entrega", "Entrega")):
+                resposta = self.client.get(historico, {"tipo": tipo})
+                self.assertEqual(resposta.status_code, 200)
+                eventos = resposta.context["movimentacoes"]
+                self.assertTrue(eventos)
+                self.assertEqual({(evento["tipo"], evento["rotulo"]) for evento in eventos}, {(tipo, rotulo)})

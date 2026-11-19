@@ -177,7 +177,7 @@ class TesteHistorico(BaseViewTest):
         url = reverse("movimentacoes:historico")
         resposta = self.client.get(url)
         self.assertContains(resposta, "NF-DEMO-001")
-        self.assertNotContains(resposta, "Entrega")  # corte/entrega não são deste módulo
+        self.assertIn("entrega", {m["tipo"] for m in resposta.context["movimentacoes"]})
         self.assertNotContains(self.client.get(url, {"tipo": "perda"}), "NF-DEMO-001")
         self.assertContains(self.client.get(url, {"id_material": "2"}), "NF-DEMO-002")
         self.assertNotContains(self.client.get(url, {"id_material": "2"}), "NF-DEMO-001")

@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError, connection
+from django.db import IntegrityError, OperationalError, connection
 from django.db.models import Q
 from django.shortcuts import redirect, render
 from django.views import View
@@ -78,19 +78,26 @@ class OperacaoCreateView(LoginRequiredMixin, View):
                 d.pop("id", None)
                 d.pop("operacao", None)
             try:
-                registrar_operacao(operacao=operacao, pecas=dados_pecas, sobras=dados_sobras, usuario=request.user)
+                registrar_operacao(
+                    operacao=operacao, pecas=dados_pecas, sobras=dados_sobras, usuario=request.user,
+                    id_reserva_mysql=form.cleaned_data.get("id_reserva_mysql"),
+                )
             except ValidationError as exc:
                 for mensagem in exc.messages:
                     form.add_error(None, mensagem)
             except IntegrityError:
                 form.add_error(None, "O banco recusou a baixa. Confira a reserva e o saldo do lote.")
+            except OperationalError as exc:
+                if not exc.args or exc.args[0] not in (1205, 1213):
+                    raise
+                form.add_error(None, "O estoque está ocupado. Tente registrar o corte novamente.")
             else:
                 messages.success(request, "Corte registrado e sobras disponibilizadas no estoque.")
                 return redirect("cortes:detalhe", pk=operacao.pk)
         return self.render_forms(request, form, pecas, sobras)
 
     def render_forms(self, request, form, pecas, sobras):
-        return render(request, self.template_name, {"form": form, "pecas": pecas, "sobras": sobras})
+        return render(request, self.template_name, {"form": form, "pecas": pecas, "sobras": sobras, "usa_mysql": connection.vendor == "mysql"})
 
 
 class OperacaoDetailView(LoginRequiredMixin, DetailView):

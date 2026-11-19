@@ -36,7 +36,8 @@
           <td>
             {% if m.tipo == 'entrada' %}<span class="badge text-bg-success">Entrada</span>
             {% elif m.tipo == 'perda' %}<span class="badge text-bg-danger">Perda</span>
-            {% else %}<span class="badge text-bg-warning">Ajuste</span>{% endif %}
+            {% elif m.tipo == 'ajuste' %}<span class="badge text-bg-warning">Ajuste</span>
+            {% else %}<span class="badge text-bg-secondary">{{ m.rotulo }}</span>{% endif %}
           </td>
           <td>{{ m.codigo }} <span class="text-muted">{{ m.descricao }}</span></td>
           <td>#{{ m.id_estoque }} <span class="text-muted">{% if m.largura_mm %}{{ m.largura_mm }}x{{ m.altura_mm }} mm · {% endif %}{{ m.localizacao }}</span></td>
@@ -55,5 +56,5 @@
     </table>
   </div>
 </div>
-<p class="text-muted small mt-2">Mostrando as {{ limite }} movimentações mais recentes do filtro. Entradas, perdas e ajustes não podem ser editados nem apagados: para corrigir, registre um ajuste.</p>
+<p class="text-muted small mt-2">Mostrando as {{ limite }} movimentações mais recentes do filtro. Para corrigir uma movimentação, registre um ajuste.</p>
 {% endblock %}

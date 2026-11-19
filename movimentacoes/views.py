@@ -10,7 +10,7 @@ from .services import EstoqueError
 
 
 class HistoricoView(AcessoMovimentacoesMixin, TemplateView):
-    """Histórico de entradas, perdas e ajustes, com filtros básicos."""
+    """Histórico de movimentações, com filtros básicos."""
 
     template_name = "movimentacoes/historico.html"
     limite = 200
@@ -20,19 +20,17 @@ class HistoricoView(AcessoMovimentacoesMixin, TemplateView):
         filtro = FiltroHistoricoForm(self.request.GET or None, conn=self.conn)
         dados = filtro.cleaned_data if filtro.is_valid() else {}
         tipo = dados.get("tipo")
-        contexto.update(
-            filtro=filtro,
-            movimentacoes=services.listar_movimentacoes(
-                self.conn,
-                tipos=(tipo,) if tipo else services.TIPOS_DESTE_MODULO,
-                id_material=int(dados["id_material"]) if dados.get("id_material") else None,
-                data_inicio=dados.get("data_inicio"),
-                data_fim=dados.get("data_fim"),
-                limite=self.limite,
-            ),
+        movimentacoes = services.listar_movimentacoes(
+            self.conn,
+            tipos=(tipo,) if tipo else services.TIPOS_HISTORICO,
+            id_material=int(dados["id_material"]) if dados.get("id_material") else None,
+            data_inicio=dados.get("data_inicio"),
+            data_fim=dados.get("data_fim"),
             limite=self.limite,
-            aba="historico",
         )
+        for movimento in movimentacoes:
+            movimento["rotulo"] = services.TIPOS_HISTORICO[movimento["tipo"]]
+        contexto.update(filtro=filtro, movimentacoes=movimentacoes, limite=self.limite, aba="historico")
         return contexto
 
 

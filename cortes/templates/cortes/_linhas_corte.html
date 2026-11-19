@@ -1,0 +1,10 @@
+<div class="card card-body mb-3" data-formset>
+  <h2 class="h5">{{ titulo }}</h2>
+  {{ conjunto.management_form }}
+  {{ conjunto.non_form_errors }}
+  <div data-linhas>
+    {% for linha in conjunto %}{% include "cortes/_linha_corte.html" %}{% endfor %}
+  </div>
+  <template>{% include "cortes/_linha_corte.html" with linha=conjunto.empty_form %}</template>
+  <button type="button" class="btn btn-outline-primary btn-sm align-self-start mt-3" data-adicionar hidden>{{ adicionar }}</button>
+</div>
