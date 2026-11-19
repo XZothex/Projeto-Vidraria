@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block titulo %}Dashboard{% endblock %}
+{% block conteudo %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+  <div><h1 class="h3 mb-1">Dashboard</h1><p class="text-muted mb-0">Visão geral dos cadastros, pedidos e reservas.</p></div>
+  <div class="d-flex gap-2"><a class="btn btn-outline-primary" href="{% url 'painel:historico' %}">Histórico</a><a class="btn btn-primary" href="{% url 'painel:relatorios' %}">Relatórios</a></div>
+</div>
+{% if estoque_mysql %}<p><a href="{% url 'painel:relatorio' 'posicao' %}">Consultar saldo físico e disponível</a></p>{% endif %}
+<div class="row g-3 mb-4">
+<div class="col-6 col-xl-3"><div class="card h-100"><div class="card-body"><div class="text-muted small">Materiais ativos</div><div class="display-6">{{ total_materiais }}</div></div></div></div>
+<div class="col-6 col-xl-3"><div class="card h-100"><div class="card-body"><div class="text-muted small">Pedidos em aberto</div><div class="display-6">{{ total_pedidos_abertos }}</div></div></div></div>
+<div class="col-6 col-xl-3"><div class="card h-100"><div class="card-body"><div class="text-muted small">Pedidos entregues</div><div class="display-6">{{ total_pedidos_entregues }}</div></div></div></div>
+<div class="col-6 col-xl-3"><div class="card h-100"><div class="card-body"><div class="text-muted small">Reservas pendentes</div><div class="display-6">{{ total_reservas|default_if_none:"—" }}</div></div></div></div>
+</div>
+<div class="row g-4">
+<div class="col-lg-7"><div class="card h-100"><div class="card-header bg-white fw-semibold">Eventos recentes</div><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Data</th><th>Evento</th><th>Material</th><th>Pedido</th></tr></thead><tbody>
+{% for e in eventos_recentes %}<tr><td class="text-nowrap">{{ e.data|date:"d/m/Y H:i" }}</td><td>{{ e.tipo }}</td><td>{{ e.material }}</td><td>{{ e.pedido }}</td></tr>{% empty %}<tr><td colspan="4" class="text-center text-muted py-4">Nenhum evento registrado.</td></tr>{% endfor %}
+</tbody></table></div></div></div>
+<div class="col-lg-5"><div class="card h-100"><div class="card-header bg-white fw-semibold">Materiais reservados</div><div class="card-body">{% for material, quantidade in materiais_reservados %}<div class="d-flex justify-content-between border-bottom py-2"><span>{{ material.0 }} · {{ material.1 }}</span><strong>{{ quantidade }} {{ material.2 }}</strong></div>{% empty %}<p class="text-muted mb-0">{% if total_reservas is None %}Vincule o usuário ao estoque MySQL para consultar as reservas.{% else %}Nenhuma reserva pendente.{% endif %}</p>{% endfor %}</div></div></div>
+<div class="col-12"><div class="card"><div class="card-header bg-white fw-semibold">Pedidos recentes</div><div class="table-responsive"><table class="table mb-0"><thead><tr><th>Pedido</th><th>Cliente</th><th>Situação</th><th>Criação</th></tr></thead><tbody>{% for p in pedidos_recentes %}<tr><td><a href="{{ p.get_absolute_url }}">{{ p.numero }}</a></td><td>{{ p.cliente.nome }}</td><td>{{ p.get_status_display }}</td><td>{{ p.criado_em|date:"d/m/Y H:i" }}</td></tr>{% empty %}<tr><td colspan="4" class="text-center text-muted py-3">Nenhum pedido cadastrado.</td></tr>{% endfor %}</tbody></table></div></div></div>
+</div>
+{% endblock %}

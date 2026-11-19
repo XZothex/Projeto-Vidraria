@@ -68,6 +68,10 @@ class EstoqueMySQLTest(TransactionTestCase):
         id_reserva = Reserva.objects.get(item__pedido=outro).mysql_reservas[0]
         item = outro.itens.get()
         self.client.force_login(usuario)
+        posicao = reverse("painel:relatorio", args=["posicao"])
+        url_reservas = reverse("painel:relatorio", args=["reservas"])
+        self.assertContains(self.client.get(posicao), "Disponível")
+        self.assertContains(self.client.get(url_reservas), cliente.nome)
         dados_corte = {
             "pedido": outro.pk, "item_pedido": item.pk, "material": material.pk,
             "origem": "mysql", "kerf_mm": "3",
@@ -83,6 +87,12 @@ class EstoqueMySQLTest(TransactionTestCase):
         corte = OperacaoCorte.objects.get(item_pedido=item)
         self.assertEqual(corte.pecas.count(), 2)
         self.assertEqual(corte.sobras.count(), 2)
+        self.assertNotContains(self.client.get(url_reservas), cliente.nome)
+        resposta_posicao = self.client.get(posicao, {"q": "vid-t8", "exportar": "csv"})
+        self.assertContains(resposta_posicao, "chapa;compra;1.000;1.000;0.000")
+        self.assertContains(resposta_posicao, "chapa;sobra;3.000;0.000;3.000")
+        self.assertEqual(self.client.get(reverse("painel:dashboard")).context["total_reservas"], 0)
+
         sobra = corte.sobras.first()
         with connection.cursor() as cursor:
             cursor.execute("SELECT fisico, origem FROM saldo_estoque WHERE id_estoque = %s", [sobra.mysql_lote_id])
