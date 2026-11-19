@@ -5,8 +5,8 @@ from django.views.generic import RedirectView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    # Login/logout PROVISÓRIOS com as views padrão do Django.
-    # Substituir pelas rotas do módulo de login quando ele existir.
+    path("contas/", include("contas.urls")),
+    # Autenticação e sessões do Django.
     path("entrar/", auth_views.LoginView.as_view(), name="login"),
     path("sair/", auth_views.LogoutView.as_view(), name="logout"),
     # Módulo de cadastros (materiais e fornecedores)

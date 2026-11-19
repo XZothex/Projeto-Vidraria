@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     # Módulos do sistema (um app por responsabilidade)
     "cadastros",  # materiais e fornecedores
     "pedidos",  # clientes, pedidos, reservas e entregas
+    "contas",  # gestão de usuários com autenticação Django
     "painel",
     "cortes",  # cortes, peças e sobras
     "movimentacoes",  # entradas, perdas e ajustes de estoque (banco MySQL)
@@ -114,11 +115,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# --- Autenticação (PONTO DE INTEGRAÇÃO) -------------------------------------
-# Enquanto o módulo de login não existir, usamos o LoginView padrão do Django
-# (config/urls.py). Quando o módulo de login/permissões estiver pronto, basta
-# ajustar LOGIN_URL e as rotas; as views de cadastros só dependem do mixin
-# cadastros.mixins.AcessoCadastrosMixin.
+# --- Autenticação Django ---------------------------------------------------
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "cadastros:material_list"
 LOGOUT_REDIRECT_URL = "login"

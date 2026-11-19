@@ -12,3 +12,7 @@ O [guia de cortes e sobras](docs/cortes.md) descreve o fluxo local e com MySQL.
 ## Painel e relatórios
 
 O [guia do painel](docs/painel.md) explica os relatórios e a origem dos saldos.
+
+## Login e usuários
+
+Veja o [guia de gestão de usuários](docs/contas.md).

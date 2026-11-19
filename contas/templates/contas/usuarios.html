@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block titulo %}Usuários{% endblock %}
+{% block conteudo %}
+<h1 class="h3 mb-3">Usuários</h1>
+<div class="row g-4">
+  <section class="col-lg-5">
+    <form method="post" class="card card-body" novalidate>
+      <h2 class="h5">Cadastrar usuário</h2>
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for campo in form %}{% include "partials/_campo.html" %}{% endfor %}
+      <button type="submit" class="btn btn-primary align-self-start">Cadastrar</button>
+    </form>
+  </section>
+  <section class="col-lg-7">
+    <div class="card table-responsive">
+      <table class="table align-middle mb-0">
+        <thead><tr><th scope="col">Usuário</th><th scope="col">Tipo</th><th scope="col">Status</th><th scope="col">Ação</th></tr></thead>
+        <tbody>
+          {% for conta in pagina %}
+          <tr>
+            <th scope="row">{{ conta.get_full_name|default:conta.username }}<br><small class="text-muted">{{ conta.username }}</small></th>
+            <td>{% if conta.is_superuser %}Administrador{% else %}Funcionário{% endif %}</td>
+            <td>{% if conta.is_active %}Ativa{% else %}Desativada{% endif %}</td>
+            <td>
+              {% if conta.pk != user.pk %}
+              <form method="post" action="{% url 'contas:alternar_status' conta.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="ativo" value="{% if conta.is_active %}0{% else %}1{% endif %}">
+                <button type="submit" class="btn btn-sm btn-outline-secondary">{% if conta.is_active %}Desativar{% else %}Ativar{% endif %}</button>
+              </form>
+              {% else %}Sua conta{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <nav class="d-flex gap-3 mt-3" aria-label="Páginas de usuários">
+      {% if pagina.has_previous %}<a href="?page={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
+      <span>Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+      {% if pagina.has_next %}<a href="?page={{ pagina.next_page_number }}">Próxima</a>{% endif %}
+    </nav>
+  </section>
+</div>
+{% endblock %}
