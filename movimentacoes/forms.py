@@ -99,7 +99,7 @@ class AjusteForm(BootstrapFormMixin, forms.Form):
 class FiltroHistoricoForm(BootstrapFormMixin, forms.Form):
     tipo = forms.ChoiceField(
         label="Tipo", required=False,
-        choices=[("", "Todos")] + [(t, t.capitalize()) for t in services.TIPOS_DESTE_MODULO],
+        choices=[("", "Todos")] + list(services.TIPOS_HISTORICO.items()),
     )
     id_material = forms.ChoiceField(label="Material", required=False)
     data_inicio = forms.DateField(label="De", required=False, widget=forms.DateInput(attrs={"type": "date"}))

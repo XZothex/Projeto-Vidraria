@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block titulo %}Registrar corte{% endblock %}
+{% block conteudo %}
+<h1 class="h3 mb-3">Registrar corte</h1>
+<form method="post">
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+  <div class="card card-body mb-3">
+    <h2 class="h5">Dados do corte</h2>
+    <div class="row">
+      {% for campo in form %}
+      <div class="col-md-6">{% include "partials/_campo.html" %}</div>
+      {% endfor %}
+    </div>
+    {% if usa_mysql %}
+    <p class="form-text mb-0">O corte usa as dimensões e a quantidade do lote reservado. Se o item tiver mais de um lote, selecione um por operação. Informe as medidas das sobras em milímetros inteiros.</p>
+    {% else %}
+    <p class="form-text mb-0">Selecione uma chapa ou sobra cadastrada, ou informe as dimensões da chapa na origem manual.</p>
+    {% endif %}
+  </div>
+  {% include "cortes/_linhas_corte.html" with conjunto=pecas titulo="Peças produzidas" adicionar="Adicionar peça" %}
+  {% include "cortes/_linhas_corte.html" with conjunto=sobras titulo="Sobras reaproveitáveis" adicionar="Adicionar sobra" %}
+  <p class="alert alert-warning small">Confira o encaixe das peças na chapa antes de cortar. O sistema valida as medidas e a área total estimada.</p>
+  <div class="d-flex gap-2">
+    <button class="btn btn-primary">Registrar corte</button>
+    <a class="btn btn-outline-secondary" href="{% url 'cortes:lista' %}">Cancelar</a>
+  </div>
+</form>
+<script>
+  for (const conjunto of document.querySelectorAll("[data-formset]")) {
+    const total = conjunto.querySelector('[name$="-TOTAL_FORMS"]');
+    const maximo = conjunto.querySelector('[name$="-MAX_NUM_FORMS"]');
+    const modelo = conjunto.querySelector("template");
+    const linhas = conjunto.querySelector("[data-linhas]");
+    const adicionar = conjunto.querySelector("[data-adicionar]");
+    adicionar.hidden = false;
+    adicionar.disabled = Number(total.value) >= Number(maximo.value);
+    adicionar.addEventListener("click", () => {
+      const indice = Number(total.value);
+      if (indice >= Number(maximo.value)) return;
+      const novaLinha = document.createElement("template");
+      novaLinha.innerHTML = modelo.innerHTML.replaceAll("__prefix__", String(indice));
+      const primeiroCampo = novaLinha.content.querySelector('input:not([type="hidden"]), select, textarea');
+      linhas.append(novaLinha.content);
+      total.value = String(indice + 1);
+      adicionar.disabled = Number(total.value) >= Number(maximo.value);
+      primeiroCampo?.focus();
+    });
+  }
+</script>
+{% endblock %}

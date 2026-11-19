@@ -36,6 +36,10 @@ PERFIS_AJUSTE = {"administracao"}  # o cliente pediu que ajustes sejam autorizad
 CATEGORIAS_PERDA = ("quebra", "defeito", "extravio")
 UNIDADES_INTEIRAS = {"chapa", "peca"}
 TIPOS_DESTE_MODULO = ("entrada", "perda", "ajuste")
+TIPOS_HISTORICO = {
+    "entrada": "Entrada", "perda": "Perda", "ajuste": "Ajuste",
+    "corte": "Corte", "sobra": "Sobra", "entrega": "Entrega", "devolucao": "Devolução",
+}
 
 
 class EstoqueError(Exception):
@@ -372,12 +376,12 @@ def listar_lotes(conn, id_material=None, somente_com_saldo=False):
 
 def listar_movimentacoes(conn, tipos=TIPOS_DESTE_MODULO, id_material=None, id_estoque=None,
                          data_inicio=None, data_fim=None, limite=500):
-    """Histórico de entradas, perdas e ajustes, do mais recente ao mais antigo.
+    """Histórico de movimentações, do mais recente ao mais antigo.
 
     ``data_inicio`` e ``data_fim`` são ``datetime.date`` (fim inclusivo).
     ``area_m2`` é a área movimentada (medidas do lote x quantidade), quando há medidas.
     """
-    tipos = [t for t in tipos if t in TIPOS_DESTE_MODULO] or list(TIPOS_DESTE_MODULO)
+    tipos = [t for t in tipos if t in TIPOS_HISTORICO] or list(TIPOS_DESTE_MODULO)
     sql = f"""SELECT mov.id_movimentacao, mov.data_movimentacao, mov.tipo, mov.quantidade,
                      mov.nota_fiscal, mov.motivo, mov.id_estoque, e.localizacao,
                      e.largura_mm, e.altura_mm, e.custo_unitario,
