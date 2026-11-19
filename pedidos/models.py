@@ -93,6 +93,8 @@ class Pedido(models.Model):
     )
     motivo_cancelamento = models.TextField("Motivo do cancelamento", blank=True)
 
+    mysql_pedido_id = models.PositiveIntegerField(null=True, blank=True, editable=False, unique=True)
+
     class Meta:
         ordering = ["-criado_em", "-pk"]
         verbose_name = "pedido"
@@ -149,6 +151,7 @@ class ItemPedido(models.Model):
 
 
 class Reserva(models.Model):
+
     class Status(models.TextChoices):
         ATIVA = "ativa", "Ativa"
         LIBERADA = "liberada", "Liberada"
@@ -161,6 +164,14 @@ class Reserva(models.Model):
     criada_por = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )
+    mysql_reservas = models.JSONField(default=list, blank=True, editable=False)
+    item_com_reserva_ativa = models.GeneratedField(
+        expression=models.Case(models.When(status="ativa", then=models.F("item_id"))),
+        output_field=models.BigIntegerField(),
+        db_persist=True,
+        null=True,
+        unique=True,
+    )
     encerrada_em = models.DateTimeField("Encerrada em", null=True, blank=True)
     encerrada_por = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
@@ -172,9 +183,6 @@ class Reserva(models.Model):
         verbose_name_plural = "reservas"
         constraints = [
             models.CheckConstraint(condition=models.Q(quantidade__gt=0), name="reserva_quantidade_positiva"),
-            models.UniqueConstraint(
-                fields=["item"], condition=models.Q(status="ativa"), name="uma_reserva_ativa_por_item"
-            ),
         ]
 
     def __str__(self):

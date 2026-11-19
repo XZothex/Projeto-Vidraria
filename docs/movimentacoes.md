@@ -26,9 +26,31 @@ Quem manda em quem pode o quê são as constantes `PERFIS_*` em `movimentacoes/s
 ## Pontos de integração
 - **Usuário:** o login do Django (`username`) deve ser igual a `usuario.login` no MySQL, que traz o `perfil`.
   A ligação fica em `AcessoMovimentacoesMixin.buscar_usuario` (`mixins.py`); trocar lá quando o módulo de login decidir outra forma.
-- **Banco:** conexão pelas variáveis `MYSQL_*` do `.env` (veja `.env.example`). O resto do projeto continua em SQLite/PostgreSQL.
-- **Pedidos:** `pedidos/estoque.py::saldo_fisico` ainda devolve `None`. A consulta pronta é `services.listar_lotes` (coluna `disponivel`),
-  mas só vale a pena ligar depois que o grupo decidir qual banco será o definitivo.
+- **Banco:** `MYSQL_*` aponta para a base SQL. Com `DB_ENGINE=mysql`, os pedidos do
+  Django usam a mesma base e compartilham a transação ao reservar, liberar e entregar.
+  Em SQLite ou PostgreSQL, o módulo de movimentações continua usando a conexão MySQL separada.
+- **Pedidos:** em MySQL, cadastre o material com o mesmo código e unidade nos dois
+  cadastros. A reserva usa lotes de compra já cadastrados. Sobras ficam fora dessa seleção.
+  A entrega baixa o lote reservado ou registra quantidade zero se o lote já foi baixado
+  pelo corte. Reservas antigas sem vínculo devem ser liberadas e refeitas antes da entrega.
+- **Dados:** o vínculo MySQL do pedido e das reservas é criado na primeira alocação.
+  Os itens SQL guardam o contexto das alocações e têm preço zero, pois o módulo de pedidos
+  do Django ainda não gerencia preços. Materiais, fornecedores e logins exigem
+  correspondência entre cadastros. As migrações não copiam dados de SQLite/PostgreSQL.
+
+## Ativar a integração com pedidos
+
+1. Em MySQL 8.4, execute `banco/mysql/sql/create_tables.sql` para criar a base. Use
+   `inserts.sql` opcionalmente, uma vez, para carregar a demonstração em uma base vazia.
+2. Instale `pip install -r requirements-mysql.txt`. Em Linux, se o driver for compilado,
+   instale os cabeçalhos de desenvolvimento do cliente MySQL/MariaDB e o compilador.
+3. Configure `DB_ENGINE=mysql` e `MYSQL_*` no `.env`. Execute `python manage.py migrate`
+   para criar as tabelas Django na mesma base. Crie o usuário Django com
+   `python manage.py createsuperuser`. O nome precisa existir em `usuario.login`
+   no MySQL (por exemplo, `demo.estoque` no script de demonstração).
+4. Cadastre no Django um material com o código e unidade de um material do estoque
+   (por exemplo, `VID-T8` em chapas). Abra o pedido, reserve e confira o saldo em
+   `/movimentacoes/`. Liberar devolve o disponível e entregar baixa o físico.
 
 ## Executar e testar
 ```bash
