@@ -1,0 +1,12 @@
+{# Cabeçalho do módulo: abas e botões de ação (conforme o perfil). Espera: aba, pode_entrada, pode_perda, pode_ajuste #}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <ul class="nav nav-pills">
+    <li class="nav-item"><a class="nav-link {% if aba == 'lotes' %}active{% endif %}" href="{% url 'movimentacoes:lotes' %}">Saldos por lote</a></li>
+    <li class="nav-item"><a class="nav-link {% if aba == 'historico' %}active{% endif %}" href="{% url 'movimentacoes:historico' %}">Histórico</a></li>
+  </ul>
+  <div class="d-flex flex-wrap gap-2">
+    {% if pode_entrada %}<a class="btn btn-success btn-sm" href="{% url 'movimentacoes:entrada' %}">Registrar entrada</a>{% endif %}
+    {% if pode_perda %}<a class="btn btn-outline-danger btn-sm" href="{% url 'movimentacoes:perda' %}">Registrar perda</a>{% endif %}
+    {% if pode_ajuste %}<a class="btn btn-outline-warning btn-sm" href="{% url 'movimentacoes:ajuste' %}">Ajuste de inventário</a>{% endif %}
+  </div>
+</div>

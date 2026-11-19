@@ -13,6 +13,8 @@ urlpatterns = [
     path("cadastros/", include("cadastros.urls")),
     # Módulo de pedidos (clientes, pedidos, reservas e entregas)
     path("pedidos/", include("pedidos.urls")),
+    # Módulo de entradas, perdas e ajustes de estoque
+    path("movimentacoes/", include("movimentacoes.urls")),
     # Página inicial provisória (o dashboard é de outro módulo)
     path("", RedirectView.as_view(pattern_name="cadastros:material_list"), name="home"),
 ]
