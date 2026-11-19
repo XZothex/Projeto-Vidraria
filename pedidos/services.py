@@ -8,17 +8,30 @@ viram ``RegraDeNegocioError`` com mensagem pronta para mostrar ao usuário.
 from collections import defaultdict
 from decimal import Decimal
 
-from django.db import transaction
+from django.db import IntegrityError, OperationalError, transaction
 from django.utils import timezone
 
 from cadastros.models import Material
 
-from . import estoque
+from . import estoque, estoque_mysql
 from .models import Entrega, ItemPedido, Pedido, Reserva
 
 
 class RegraDeNegocioError(Exception):
     """Operação recusada por uma regra de negócio (mensagem amigável)."""
+
+
+def _operacao_mysql(operacao, *args, **kwargs):
+    try:
+        return operacao(*args, **kwargs)
+    except estoque_mysql.ErroEstoque as exc:
+        raise RegraDeNegocioError(str(exc)) from exc
+    except IntegrityError as exc:
+        raise RegraDeNegocioError("O estoque MySQL recusou a operação. Confira o saldo e a reserva.") from exc
+    except OperationalError as exc:
+        if exc.args and exc.args[0] in (1205, 1213):
+            raise RegraDeNegocioError("O estoque está ocupado. Tente a operação novamente.") from exc
+        raise
 
 
 def _fmt(qtd):
@@ -91,6 +104,14 @@ def reservar(pedido, usuario, itens=None):
     # Trava os materiais em ordem fixa (evita deadlock) antes de conferir a disponibilidade.
     ids_materiais = sorted({i.material_id for i in pendentes})
     materiais = {m.pk: m for m in Material.objects.select_for_update().filter(pk__in=ids_materiais).order_by("pk")}
+    if estoque_mysql.ativo():
+        alocacoes = _operacao_mysql(estoque_mysql.reservar, pedido, pendentes, usuario)
+        Reserva.objects.bulk_create([
+            Reserva(item=item, quantidade=item.quantidade, criada_por=usuario, mysql_reservas=ids)
+            for item, ids in zip(pendentes, alocacoes, strict=True)
+        ])
+        return len(pendentes)
+
     necessario = defaultdict(Decimal)
     for item in pendentes:
         necessario[item.material_id] += item.quantidade
@@ -117,7 +138,10 @@ def liberar(pedido, usuario, itens=None):
     """Libera as reservas ativas (todas, ou só dos itens informados)."""
     pedido = _pedido_aberto_travado(pedido)
     ids = [i.pk for i in _itens_do_pedido(pedido, itens)]
-    quantidade = Reserva.objects.filter(item_id__in=ids, status=Reserva.Status.ATIVA).update(
+    ativas = Reserva.objects.filter(item_id__in=ids, status=Reserva.Status.ATIVA)
+    if estoque_mysql.ativo():
+        _operacao_mysql(estoque_mysql.encerrar, list(ativas), usuario)
+    quantidade = ativas.update(
         status=Reserva.Status.LIBERADA, encerrada_em=timezone.now(), encerrada_por=usuario
     )
     if not quantidade:
@@ -134,7 +158,11 @@ def cancelar(pedido, usuario, motivo):
         raise RegraDeNegocioError("Informe o motivo do cancelamento.")
     pedido = _pedido_aberto_travado(pedido)
     agora = timezone.now()
-    Reserva.objects.filter(item__pedido=pedido, status=Reserva.Status.ATIVA).update(
+    ativas = Reserva.objects.filter(item__pedido=pedido, status=Reserva.Status.ATIVA)
+    if estoque_mysql.ativo():
+        _operacao_mysql(estoque_mysql.encerrar, list(ativas), usuario)
+        _operacao_mysql(estoque_mysql.atualizar_pedido, pedido, "cancelado")
+    ativas.update(
         status=Reserva.Status.LIBERADA, encerrada_em=agora, encerrada_por=usuario
     )
     pedido.status = Pedido.Status.CANCELADO
@@ -163,7 +191,11 @@ def registrar_entrega(pedido, usuario, data_entrega, recebido_por, observacoes="
         )
     if data_entrega > timezone.localdate():
         raise RegraDeNegocioError("A data da entrega não pode ser futura.")
-    Reserva.objects.filter(item__pedido=pedido, status=Reserva.Status.ATIVA).update(
+    ativas = Reserva.objects.filter(item__pedido=pedido, status=Reserva.Status.ATIVA)
+    if estoque_mysql.ativo():
+        _operacao_mysql(estoque_mysql.encerrar, list(ativas), usuario, entrega=True)
+        _operacao_mysql(estoque_mysql.atualizar_pedido, pedido, "entregue")
+    ativas.update(
         status=Reserva.Status.CONSUMIDA, encerrada_em=timezone.now(), encerrada_por=usuario
     )
     Entrega.objects.create(

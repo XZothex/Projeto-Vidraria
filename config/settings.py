@@ -71,8 +71,20 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 # --- Banco de dados -------------------------------------------------------
-# SQLite = apenas desenvolvimento local. PostgreSQL = banco definitivo.
-if os.environ.get("DB_ENGINE", "sqlite").lower() == "postgresql":
+DB_ENGINE = os.environ.get("DB_ENGINE", "sqlite").lower()
+if DB_ENGINE == "mysql":
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.mysql",
+            "NAME": os.environ.get("MYSQL_DATABASE", "estoque_vidracaria_v2"),
+            "USER": os.environ.get("MYSQL_USER", "root"),
+            "PASSWORD": os.environ.get("MYSQL_PASSWORD", ""),
+            "HOST": os.environ.get("MYSQL_HOST", "127.0.0.1"),
+            "PORT": os.environ.get("MYSQL_PORT", "3306"),
+            "OPTIONS": {"charset": "utf8mb4"},
+        }
+    }
+elif DB_ENGINE == "postgresql":
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",

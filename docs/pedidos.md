@@ -31,14 +31,13 @@ Erros de regra levantam `RegraDeNegocioError` (mensagem pronta para o usuário).
 - `reservar` é **tudo ou nada** e recusa material inativo.
 - `registrar_entrega` exige itens e **todos reservados**; data não pode ser futura.
 
-## ⚠️ Estoque: ponto de integração (`pedidos/estoque.py`)
-Ainda não existe módulo de estoque, então **não há saldo físico**. Decisão da equipe: **o saldo será por chapa**. Hoje `saldo_fisico()` devolve `None` e as reservas
-são registradas **sem checar disponibilidade**. Quando o estoque existir, implemente só `saldo_fisico(material)`:
-o sistema passa a recusar reservas acima de *saldo − já reservado* (a lógica e os testes já estão prontos).
+## Estoque
 
-> **Atenção à unidade:** `saldo_fisico` deve devolver chapas. Isso só é comparável com materiais cujo
-> `unidade_controle` é **chapa**. Materiais em **m²** ou **metro** (ex.: no `popular_cadastros`, o vidro temperado
-> está em m²) precisam ser cadastrados como chapa ou convertidos antes de comparar. Combinar com quem cuida de cortes e sobras.
+Com `DB_ENGINE=mysql`, a reserva confere o saldo físico do MySQL e bloqueia
+quantidades acima do disponível. Liberar ou cancelar devolve a quantidade
+reservada. Entregar baixa o saldo uma vez, ou grava quantidade zero se já houve
+corte na reserva. Veja [o guia de integração](movimentacoes.md).
+SQLite e PostgreSQL mantêm o fluxo de pedidos sem conferência de saldo físico.
 
 ## Telas
 `/pedidos/` (lista, busca por cliente/nº, filtro por situação) · `/pedidos/novo/` · `/pedidos/<id>/` (itens, reservas e ações) ·
