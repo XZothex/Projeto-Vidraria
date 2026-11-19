@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block titulo %}Histórico de movimentações{% endblock %}
+{% block conteudo %}
+<h1 class="h4 mb-3">Estoque</h1>
+{% include "movimentacoes/_abas.html" %}
+
+<form method="get" class="card card-body shadow-sm mb-3">
+  <div class="row g-2 align-items-end">
+    {% for campo in filtro %}
+    <div class="col-12 col-md-3">
+      <label class="form-label small mb-1" for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+      {{ campo }}
+      {% for erro in campo.errors %}<div class="invalid-feedback d-block">{{ erro }}</div>{% endfor %}
+    </div>
+    {% endfor %}
+    <div class="col-12 d-flex gap-2">
+      <button class="btn btn-primary" type="submit">Filtrar</button>
+      <a class="btn btn-outline-secondary" href="{% url 'movimentacoes:historico' %}">Limpar</a>
+    </div>
+  </div>
+</form>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0 small">
+      <thead class="table-light">
+        <tr>
+          <th>Data</th><th>Tipo</th><th>Material</th><th>Lote</th><th class="text-end">Quantidade</th>
+          <th class="text-end">Área (m²)</th><th>Nota fiscal</th><th>Motivo</th><th>Responsável</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in movimentacoes %}
+        <tr>
+          <td class="text-nowrap">{{ m.data_movimentacao|date:"d/m/Y H:i" }}</td>
+          <td>
+            {% if m.tipo == 'entrada' %}<span class="badge text-bg-success">Entrada</span>
+            {% elif m.tipo == 'perda' %}<span class="badge text-bg-danger">Perda</span>
+            {% else %}<span class="badge text-bg-warning">Ajuste</span>{% endif %}
+          </td>
+          <td>{{ m.codigo }} <span class="text-muted">{{ m.descricao }}</span></td>
+          <td>#{{ m.id_estoque }} <span class="text-muted">{% if m.largura_mm %}{{ m.largura_mm }}x{{ m.altura_mm }} mm · {% endif %}{{ m.localizacao }}</span></td>
+          <td class="text-end text-nowrap {% if m.quantidade < 0 %}text-danger{% else %}text-success{% endif %}">
+            {% if m.quantidade > 0 %}+{% endif %}{{ m.quantidade|floatformat:"-3" }} {{ m.unidade }}
+          </td>
+          <td class="text-end">{% if m.area_m2 %}{{ m.area_m2|floatformat:2 }}{% else %}—{% endif %}</td>
+          <td>{{ m.nota_fiscal|default:"—" }}</td>
+          <td>{{ m.motivo|default:"—" }}</td>
+          <td>{{ m.responsavel }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="9" class="text-center text-muted py-4">Nenhuma movimentação encontrada.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<p class="text-muted small mt-2">Mostrando as {{ limite }} movimentações mais recentes do filtro. Entradas, perdas e ajustes não podem ser editados nem apagados: para corrigir, registre um ajuste.</p>
+{% endblock %}
