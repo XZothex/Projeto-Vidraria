@@ -1,0 +1,4 @@
+body { background: #f4f6f9; min-height: 100vh; }
+.login-area { min-height: 75vh; }
+.card { border-radius: 14px; }
+.navbar-brand { letter-spacing: .2px; }

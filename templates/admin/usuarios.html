@@ -1,0 +1,14 @@
+{% extends 'base.html' %}{% block title %}Usuários | Estoque de Vidros{% endblock %}
+{% block content %}<h1 class="h3 fw-bold mb-1">Gerenciamento de usuários</h1><p class="text-secondary mb-4">Somente administradores podem gerenciar contas.</p>
+<div class="card shadow-sm mb-4"><div class="card-body"><h2 class="h5 mb-3">Cadastrar usuário</h2><form method="post" class="row g-3"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="col-md-6"><label class="form-label">Nome completo</label><input class="form-control" name="nome" required></div>
+<div class="col-md-6"><label class="form-label">Nome de usuário</label><input class="form-control" name="username" required></div>
+<div class="col-md-6"><label class="form-label">Senha (mínimo 8 caracteres)</label><input class="form-control" type="password" name="senha" minlength="8" required></div>
+<div class="col-md-6"><label class="form-label">Tipo de acesso</label><select class="form-select" name="tipo" required><option value="funcionario">Funcionário</option><option value="administrador">Administrador</option></select></div>
+<div class="col-12"><button class="btn btn-primary">Cadastrar usuário</button></div></form></div></div>
+<div class="card shadow-sm"><div class="card-body"><h2 class="h5 mb-3">Usuários cadastrados</h2><div class="table-responsive"><table class="table align-middle">
+<thead><tr><th>Nome</th><th>Usuário</th><th>Perfil</th><th>Status</th><th>Ação</th></tr></thead><tbody>
+{% for u in usuarios %}<tr><td>{{ u.nome }}</td><td>{{ u.username }}</td><td>{{ 'Administrador' if u.tipo == 'administrador' else 'Funcionário' }}</td>
+<td><span class="badge {{ 'text-bg-success' if u.ativo else 'text-bg-secondary' }}">{{ 'Ativo' if u.ativo else 'Inativo' }}</span></td>
+<td><form method="post" action="{{ url_for('admin.alternar_status', user_id=u.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-outline-secondary">{{ 'Desativar' if u.ativo else 'Ativar' }}</button></form></td></tr>
+{% else %}<tr><td colspan="5" class="text-center text-secondary">Nenhum usuário cadastrado.</td></tr>{% endfor %}</tbody></table></div></div></div>{% endblock %}
